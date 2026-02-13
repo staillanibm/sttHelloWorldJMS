@@ -1,0 +1,85 @@
+DOCKER_RUNTIME=podman
+DEPLOYMENT_NAME=stt-hello-world-jms
+IMAGE_NAME=ghcr.io/staillanibm/msr-hello-world-jms
+TAG=latest
+DOCKER_ROOT_URL=http://localhost:15555
+DOCKER_ADMIN_PASSWORD=Manage123
+KUBE_NAMESPACE=integration
+KUBE_ROOT_URL=https://stt-hello-world-jms-integration.apps.itz-q037mu.infra01-lb.fra02.techzone.ibm.com
+KUBE_ADMIN_PASSWORD=Manage12345
+
+docker-build:
+	$(DOCKER_RUNTIME) build -t $(IMAGE_NAME):$(TAG) --platform=linux/amd64 --build-arg WPM_TOKEN=${WPM_TOKEN} --build-arg GIT_TOKEN=${GIT_TOKEN} .
+
+docker-login-whi:
+	@echo ${WHI_CR_PASSWORD} | $(DOCKER_RUNTIME) login ${WHI_CR_SERVER} -u ${WHI_CR_USERNAME} --password-stdin
+
+docker-login-gh:
+	@echo ${GH_CR_PASSWORD} | $(DOCKER_RUNTIME) login ${GH_CR_SERVER} -u ${GH_CR_USERNAME} --password-stdin
+
+docker-push:
+	$(DOCKER_RUNTIME) push $(IMAGE_NAME):$(TAG)
+
+docker-run:
+	IMAGE_NAME=${IMAGE_NAME} TAG=${TAG}	DEPLOYMENT_NAME=$(DEPLOYMENT_NAME) $(DOCKER_RUNTIME) compose -f ./resources/docker-compose/docker-compose.yml up -d
+
+docker-stop:
+	IMAGE_NAME=${IMAGE_NAME} TAG=${TAG}	DEPLOYMENT_NAME=$(DEPLOYMENT_NAME) $(DOCKER_RUNTIME) compose -f ./resources/docker-compose/docker-compose.yml down
+
+docker-logs:
+	$(DOCKER_RUNTIME) logs $(DEPLOYMENT_NAME)
+
+docker-logs-f:
+	$(DOCKER_RUNTIME) logs -f $(DEPLOYMENT_NAME)
+
+docker-test:
+	curl -X POST $(DOCKER_ROOT_URL)/helloworld/messages \
+    -u Administrator:$(DOCKER_ADMIN_PASSWORD) \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"content": "Hello", "createdBy": "Stéphane"}'
+
+ocp-login:
+	@oc login ${OCP_API_URL} -u ${OCP_USERNAME} -p ${OCP_PASSWORD}
+
+helm-install-wm-repo:
+	helm repo add webmethods-official https://ibm.github.io/webmethods-helm-charts/charts
+
+helm-update-wm-repo:
+	helm repo update webmethods-official 
+
+helm-search-wm-repo:
+	helm search repo webmethods-official
+
+kube-create-pull-secret:
+	kubectl create secret docker-registry gh-regcred \
+	--docker-server=${GH_CR_SERVER} \
+	--docker-username=${GH_CR_USERNAME} \
+	--docker-password=${GH_CR_PASSWORD} \
+	-n $(KUBE_NAMESPACE)
+
+kube-create-truststore-secret:
+	kubectl create secret generic um-truststore \
+	--from-file=um_truststore.jks=./resources/certs/um_truststore.jks \
+	-n $(KUBE_NAMESPACE)
+
+kube-deploy:
+	kubectl apply -f ./resources/helm/msr-secrets.yaml -n $(KUBE_NAMESPACE)
+	helm upgrade --install stt-hello-world-jms webmethods-official/microservicesruntime -n $(KUBE_NAMESPACE) -f ./resources/helm/msr-values.yaml
+
+kube-test:
+	curl -X POST $(KUBE_ROOT_URL)/helloworld/messages \
+    -u Administrator:$(KUBE_ADMIN_PASSWORD) \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"content": "Hello", "createdBy": "Stéphane"}'
+
+kube-restart:
+	kubectl rollout restart deployment $(DEPLOYMENT_NAME) -n $(KUBE_NAMESPACE)
+
+kube-get-pods:
+	kubectl get pods -l app=$(DEPLOYMENT_NAME) -n $(KUBE_NAMESPACE)
+
+kube-logs-f:
+	kubectl logs -l app=$(DEPLOYMENT_NAME) -n $(KUBE_NAMESPACE) --all-containers=true -f --prefix
+

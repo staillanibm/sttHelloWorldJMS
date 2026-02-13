@@ -1,0 +1,20 @@
+services:
+  msr:
+    image: ${IMAGE_NAME}:${TAG}
+    container_name: ${DEPLOYMENT_NAME}
+    networks:
+      - wm
+    ports:
+      - "15555:5555"
+    volumes:
+      - ./application.properties:/opt/softwareag/IntegrationServer/application.properties
+      - ../certs/um_techzone_truststore.jks:/opt/softwareag/IntegrationServer/conf/um_truststore.jks
+    env_file:
+      - .env
+    healthcheck:
+      interval: 5s
+      retries: 24
+      test: ["CMD-SHELL", "curl -o /dev/null -s -w '%{http_code}' http://localhost:5555 | grep -qE '^(200|3[0-9]{2})$'"]
+
+networks:
+  wm:

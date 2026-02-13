@@ -1,0 +1,51 @@
+---
+swagger: "2.0"
+info:
+  version: "1.0"
+  title: "HelloWorld"
+host: "localhost:5555"
+basePath: "/helloworld"
+schemes:
+- "http"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /messages:
+    post:
+      operationId: "postMessage"
+      parameters:
+      - in: "body"
+        name: "message"
+        required: true
+        schema:
+          $ref: "#/definitions/Message"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/postMessageResponse"
+        "401":
+          description: "Access Denied"
+definitions:
+  Message:
+    type: "object"
+    required:
+    - "content"
+    properties:
+      id:
+        type: "string"
+      content:
+        type: "string"
+      createdBy:
+        type: "string"
+      createdAt:
+        type: "string"
+  postMessageResponse:
+    type: "object"
+    required:
+    - "message"
+    properties:
+      message:
+        $ref: "#/definitions/Message"

@@ -1,0 +1,98 @@
+replicaCount: 1
+
+
+image:
+  repository: "ghcr.io/staillanibm/msr-hello-world-jms"
+  pullPolicy: Always
+  tag:        "latest"
+
+imagePullSecrets: 
+  - name: gh-regcred
+
+microservicesruntime:
+
+  licenseKeyProvided: false
+
+  memoryHeap:
+    min: "512M"
+    max: "1500M"
+
+  propertiesFile: 
+    content: |
+      jndi.DEFAULT_IS_JNDI_PROVIDER.initialContextFactory=com.pcbsys.nirvana.nSpace.NirvanaContextFactory
+      jndi.DEFAULT_IS_JNDI_PROVIDER.providerURL=nsps://um-integration.apps.itz-q037mu.infra01-lb.fra02.techzone.ibm.com:443
+      #jndi.DEFAULT_IS_JNDI_PROVIDER.securityPrincipal=
+      #jndi.DEFAULT_IS_JNDI_PROVIDER.securityCredentials=
+      jndi.DEFAULT_IS_JNDI_PROVIDER.trustStoreAlias=UM_TRUSTSTORE
+      jndi.DEFAULT_IS_JNDI_PROVIDER.trustStoreProp=nirvana.ssl.truststore.path
+      jndi.DEFAULT_IS_JNDI_PROVIDER.trustStorePwdProp=nirvana.ssl.truststore.pass
+
+      jms.DEFAULT_IS_JMS_CONNECTION.clientID=DEFAULT_IS_JMS_CLIENT
+      jms.DEFAULT_IS_JMS_CONNECTION.enabled=true
+      jms.DEFAULT_IS_JMS_CONNECTION.csqSize=0
+      jms.DEFAULT_IS_JMS_CONNECTION.jndi_jndiAliasName=DEFAULT_IS_JNDI_PROVIDER
+      jms.DEFAULT_IS_JMS_CONNECTION.jndi_automaticallyCreateUMAdminObjects=true
+      jms.DEFAULT_IS_JMS_CONNECTION.jndi_connectionFactoryLookupName=ocp_um
+
+      settings.watt.net.default.accept=application/json
+      settings.watt.server.ns.lockingMode=none
+
+      globalvariable.SERVER.value=$env{SERVER}
+
+      truststore.UM_TRUSTSTORE.ksLocation=/opt/softwareag/common/conf/truststore/um_truststore.jks
+      truststore.UM_TRUSTSTORE.ksPassword=$secret{UM_TRUSTSTORE_PASSWORD}
+
+      user.Administrator.password=$secret{ADMIN_PASSWORD}
+
+secretMounts:
+  - name: msr-secrets
+    secretName: msr-secrets
+    path: /etc/secrets
+  - name: um-truststore
+    secretName: um-truststore
+    path: /opt/softwareag/common/conf/truststore
+
+secretVolumes:
+  - name: msr-secrets
+    secretName: stt-hello-world-jms
+  - name: um-truststore
+    secretName: um-truststore
+
+serviceAccount:
+  create: true
+  name: "stt-hello-world-jms"
+
+
+podSecurityContext:
+  runAsNonRoot: true
+  fsGroup: null
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  runAsNonRoot: true
+  #readOnlyRootFilesystem: true
+  #runAsUser: 1000
+
+ingress:
+  enabled: false
+
+resources:
+  msrContainer:
+    limits:
+      cpu: 1
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+metering:
+  enabled: false
