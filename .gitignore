@@ -15,3 +15,4 @@ config/WORK-txnPassStore.dat
 resources/openshift/.env
 certs
 test.md
+*.jar

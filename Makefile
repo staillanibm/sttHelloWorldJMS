@@ -72,7 +72,7 @@ kube-test:
     -u Administrator:$(KUBE_ADMIN_PASSWORD) \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
-    -d '{"content": "Hello", "createdBy": "Stéphane"}'
+    -d '{"content": "Hello Kube", "createdBy": "Stéphane"}'
 
 kube-restart:
 	kubectl rollout restart deployment $(DEPLOYMENT_NAME) -n $(KUBE_NAMESPACE)
