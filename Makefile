@@ -4,8 +4,10 @@ IMAGE_NAME=ghcr.io/staillanibm/msr-hello-world-jms
 TAG=latest
 DOCKER_ROOT_URL=http://localhost:15555
 DOCKER_ADMIN_PASSWORD=Manage123
-KUBE_NAMESPACE=integration
-KUBE_ROOT_URL=https://stt-hello-world-jms-integration.apps.itz-q037mu.infra01-lb.fra02.techzone.ibm.com
+#KUBE_NAMESPACE=integration
+#KUBE_ROOT_URL=https://stt-hello-world-jms-integration.apps.itz-q037mu.infra01-lb.fra02.techzone.ibm.com
+KUBE_NAMESPACE=iwhi
+KUBE_ROOT_URL=https://stt-hello-world-jms-iwhi.apps.aspen.nca.ihost.com
 KUBE_ADMIN_PASSWORD=Manage12345
 
 docker-build:
@@ -65,10 +67,12 @@ kube-create-truststore-secret:
 
 kube-deploy:
 	kubectl apply -f ./resources/helm/msr-secrets.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-egress-tibcoems.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-route.yaml -n $(KUBE_NAMESPACE)
 	helm upgrade --install stt-hello-world-jms webmethods-official/microservicesruntime -n $(KUBE_NAMESPACE) -f ./resources/helm/msr-values.yaml
 
 kube-test:
-	curl -X POST $(KUBE_ROOT_URL)/helloworld/messages \
+	curl -k -X POST $(KUBE_ROOT_URL)/helloworld/messages \
     -u Administrator:$(KUBE_ADMIN_PASSWORD) \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \

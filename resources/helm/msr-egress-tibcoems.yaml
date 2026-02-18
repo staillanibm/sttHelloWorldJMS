@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: stt-hello-world-jms-to-tibcoems
+  namespace: iwhi
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: stt-hello-world-jms
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tibcoems
+          podSelector:
+            matchLabels:
+              app: tibco-ems
+      ports:
+        - protocol: TCP
+          port: 7222
+  policyTypes:
+    - Egress

@@ -1,0 +1,15 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: stt-hello-world-jms
+spec:
+  path: /
+  to:
+    kind: Service
+    name: stt-hello-world-jms-microservicesruntime
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
