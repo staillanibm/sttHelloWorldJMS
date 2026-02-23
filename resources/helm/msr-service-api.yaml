@@ -1,0 +1,25 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: stt-hello-world-jms-api
+  labels:
+    app.kubernetes.io/instance: stt-hello-world-jms
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: microservicesruntime
+    app.kubernetes.io/version: '10.15'
+    helm.sh/chart: microservicesruntime-1.2.1
+  annotations:
+    meta.helm.sh/release-name: stt-hello-world-jms
+    meta.helm.sh/release-namespace: iwhi
+spec:
+  ports:
+    - name: api-port
+      protocol: TCP
+      port: 6643
+      targetPort: api-port
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app.kubernetes.io/instance: stt-hello-world-jms
+    app.kubernetes.io/name: microservicesruntime
+

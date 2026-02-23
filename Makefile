@@ -1,17 +1,17 @@
 DOCKER_RUNTIME=podman
 DEPLOYMENT_NAME=stt-hello-world-jms
-IMAGE_NAME=ghcr.io/staillanibm/msr-hello-world-jms
-TAG=latest
-DOCKER_ROOT_URL=http://localhost:15555
+IMAGE_NAME=quay.io/staillanibm/msr-hello-world-jms
+TAG=1.0.1
+DOCKER_ROOT_URL=https://localhost:16643
 DOCKER_ADMIN_PASSWORD=Manage123
 #KUBE_NAMESPACE=integration
 #KUBE_ROOT_URL=https://stt-hello-world-jms-integration.apps.itz-q037mu.infra01-lb.fra02.techzone.ibm.com
 KUBE_NAMESPACE=iwhi
-KUBE_ROOT_URL=https://stt-hello-world-jms-iwhi.apps.aspen.nca.ihost.com
+KUBE_ROOT_URL=https://stt-hello-world-jms-api-iwhi.apps.aspen.nca.ihost.com
 KUBE_ADMIN_PASSWORD=Manage12345
 
 docker-build:
-	$(DOCKER_RUNTIME) build -t $(IMAGE_NAME):$(TAG) --platform=linux/amd64 --build-arg WPM_TOKEN=${WPM_TOKEN} --build-arg GIT_TOKEN=${GIT_TOKEN} .
+	$(DOCKER_RUNTIME) build -t $(IMAGE_NAME):$(TAG) --platform=linux/amd64 .
 
 docker-login-whi:
 	@echo ${WHI_CR_PASSWORD} | $(DOCKER_RUNTIME) login ${WHI_CR_SERVER} -u ${WHI_CR_USERNAME} --password-stdin
@@ -39,7 +39,7 @@ docker-test:
     -u Administrator:$(DOCKER_ADMIN_PASSWORD) \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
-    -d '{"content": "Hello", "createdBy": "Stéphane"}'
+    -d '{"content": "Hello", "createdBy": "Stéphane"}' -k
 
 ocp-login:
 	@oc login ${OCP_API_URL} -u ${OCP_USERNAME} -p ${OCP_PASSWORD}
@@ -53,23 +53,25 @@ helm-update-wm-repo:
 helm-search-wm-repo:
 	helm search repo webmethods-official
 
-kube-create-pull-secret:
-	kubectl create secret docker-registry gh-regcred \
-	--docker-server=${GH_CR_SERVER} \
-	--docker-username=${GH_CR_USERNAME} \
-	--docker-password=${GH_CR_PASSWORD} \
-	-n $(KUBE_NAMESPACE)
-
-kube-create-truststore-secret:
-	kubectl create secret generic um-truststore \
-	--from-file=um_truststore.jks=./resources/certs/um_truststore.jks \
-	-n $(KUBE_NAMESPACE)
-
-kube-deploy:
+kube-deploy-ems:
 	kubectl apply -f ./resources/helm/msr-secrets.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-ca-issuer.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-service-certificate.yaml -n $(KUBE_NAMESPACE)
 	kubectl apply -f ./resources/helm/msr-egress-tibcoems.yaml -n $(KUBE_NAMESPACE)
-	kubectl apply -f ./resources/helm/msr-route.yaml -n $(KUBE_NAMESPACE)
-	helm upgrade --install stt-hello-world-jms webmethods-official/microservicesruntime -n $(KUBE_NAMESPACE) -f ./resources/helm/msr-values.yaml
+	kubectl apply -f ./resources/helm/msr-service-api.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-route-admin.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-route-api.yaml -n $(KUBE_NAMESPACE)
+	helm upgrade --install stt-hello-world-jms webmethods-official/microservicesruntime -n $(KUBE_NAMESPACE) -f ./resources/helm/msr-values-ems.yaml
+
+kube-deploy-um:
+	kubectl apply -f ./resources/helm/msr-secrets.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-ca-issuer.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-service-certificate.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-egress-tibcoems.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-service-api.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-route-admin.yaml -n $(KUBE_NAMESPACE)
+	kubectl apply -f ./resources/helm/msr-route-api.yaml -n $(KUBE_NAMESPACE)
+	helm upgrade --install stt-hello-world-jms webmethods-official/microservicesruntime -n $(KUBE_NAMESPACE) -f ./resources/helm/msr-values-um.yaml
 
 kube-test:
 	curl -k -X POST $(KUBE_ROOT_URL)/helloworld/messages \

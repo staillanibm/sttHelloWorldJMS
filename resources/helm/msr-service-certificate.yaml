@@ -1,0 +1,28 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: msr-service-cert
+  namespace: iwhi
+spec:
+  secretName: msr-service-tls
+  issuerRef:
+    name: server-ca-issuer
+    kind: Issuer
+  commonName: stt-hello-world-jms-api
+  dnsNames:
+    - stt-hello-world-jms-api
+    - stt-hello-world-jms-api.iwhi
+    - stt-hello-world-jms-api.iwhi.svc
+    - stt-hello-world-jms-api.iwhi.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - 127.0.0.1
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+  keystores:
+    jks:
+      create: true
+      alias: "1"
+      passwordSecretRef:
+        name: stt-hello-world-jms
+        key: API_PORT_KEYSTORE_PASSWORD

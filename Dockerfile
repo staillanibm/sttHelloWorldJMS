@@ -8,3 +8,4 @@ ADD --chown=1724:0 tibcoems/lib/tibjms.jar /opt/softwareag/IntegrationServer/lib
 ADD --chown=1724:0 tibcoems/lib/tibjmsadmin.jar /opt/softwareag/IntegrationServer/lib/jars/custom/tibjmsadmin.jar
 ADD --chown=1724:0 tibcoems/lib/tibjmsapps.jar /opt/softwareag/IntegrationServer/lib/jars/custom/tibjmsapps.jar
 ADD --chown=1724:0 tibcoems/lib/tibrvjms.jar /opt/softwareag/IntegrationServer/lib/jars/custom/tibrvjms.jar
+# Cryptography dependency missing here (not available in Tibco EMS community edition)

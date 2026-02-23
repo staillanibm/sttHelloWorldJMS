@@ -6,15 +6,68 @@ services:
       - wm
     ports:
       - "15555:5555"
+      - "16643:6643"
     volumes:
-      - ./application.properties:/opt/softwareag/IntegrationServer/application.properties
-      - ../certs/um_techzone_truststore.jks:/opt/softwareag/IntegrationServer/conf/um_truststore.jks
+      - ./application.properties.ems:/opt/softwareag/IntegrationServer/application.properties
+      - ../certs/msr-service.jks:/certs/api-port/keystore.jks
+      #- ../certs/um_techzone_truststore.jks:/certs/messaging/jms_truststore.jks
     env_file:
       - .env
     healthcheck:
       interval: 5s
       retries: 24
       test: ["CMD-SHELL", "curl -o /dev/null -s -w '%{http_code}' http://localhost:5555 | grep -qE '^(200|3[0-9]{2})$'"]
+
+  umserver:
+    container_name: umserver
+    image: cp.icr.io/cp/webmethods/universalmessaging/universalmessaging-server:11.1.2
+    networks:
+      - wm
+    volumes:
+      - um-data-volume:/opt/softwareag/UniversalMessaging/server/umserver/data
+      - um-conf-volume:/opt/softwareag/common/conf
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent http://localhost:9000/health/ | grep -q '\"ServerStatus\":\"OK\"'"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+  tibco-ems:
+    image: hatami/tibco-ems:8.5.1
+    container_name: tibco-ems
+    hostname: tibco-ems
+    networks:
+      - wm
+    volumes:
+      # Config as code: config files mounted read-only at the path EMS actually reads
+      - ./ems-config/tibemsd.conf:/opt/tibco/ems/config/tibemsd.conf:ro
+      - ./ems-config/factories.conf:/opt/tibco/ems/config/factories.conf:ro
+      - ./ems-config/queues.conf:/opt/tibco/ems/config/queues.conf:ro
+      - ./ems-config/topics.conf:/opt/tibco/ems/config/topics.conf:ro
+      - ./ems-config/users.conf:/opt/tibco/ems/config/users.conf:ro
+      - ./ems-config/groups.conf:/opt/tibco/ems/config/groups.conf:ro
+      - ./ems-config/acl.conf:/opt/tibco/ems/config/acl.conf:ro
+      - ./ems-config/routes.conf:/opt/tibco/ems/config/routes.conf:ro
+      - ./ems-config/bridges.conf:/opt/tibco/ems/config/bridges.conf:ro
+      - ./ems-config/transports.conf:/opt/tibco/ems/config/transports.conf:ro
+      - ./ems-config/durables.conf:/opt/tibco/ems/config/durables.conf:ro
+      - ./ems-config/channels.conf:/opt/tibco/ems/config/channels.conf:ro
+      - ./ems-config/stores.conf:/opt/tibco/ems/config/stores.conf:ro
+      - ./ems-config/tibrvcm.conf:/opt/tibco/ems/config/tibrvcm.conf:ro
+      # Data persistence (datastore)
+      - ems-data:/data/ems
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/tibco/ems/8.5/bin/tibemsadmin -server tcp://localhost:7222 -user admin -script /dev/null 2>&1 | grep -q 'Connected' || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  um-data-volume:
+  um-conf-volume:
+  ems-data:
 
 networks:
   wm:

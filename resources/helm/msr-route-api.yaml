@@ -1,0 +1,45 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: stt-hello-world-jms-api
+spec:
+  path: /
+  to:
+    kind: Service
+    name: stt-hello-world-jms-api
+    weight: 100
+  port:
+    targetPort: api-port
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+    destinationCACertificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIFCTCCAvGgAwIBAgIUeNDlGgR0lXzg3NTArPxkNjhtNYcwDQYJKoZIhvcNAQEL
+      BQAwFDESMBAGA1UEAwwJU2VydmVyIENBMB4XDTI2MDIyMzA4MzcyNloXDTM2MDIy
+      MTA4MzcyNlowFDESMBAGA1UEAwwJU2VydmVyIENBMIICIjANBgkqhkiG9w0BAQEF
+      AAOCAg8AMIICCgKCAgEAxL9DudHobXb2r3IpVOpYIPsKb/z0xn1mh+xW0paicfDD
+      Ptw+qp5KPMFysQqMsaFAkWRi7KCyXGwV8rxmlKkWFP4TI5nGsC0EqRPcjrt4dCbQ
+      xHGclIGTpgrCVksXnY9Z1f7H4khpjkd2s7vGC1n3fNgLT756Or+1f/ctDFvvs4n2
+      FGea0Ye+8Jqcni3p4/TkwHpEKTuoVYTPMQcIZvwyATRueyCpuLkwIqFi36++8/s5
+      o2+B5jTpIvELavoH7FZzrIIMAbaWE0zq0N1kAQQvmuhVmSMsbwYVuYFKc9z2bt71
+      PY67e59LIpv85JwFiJYZ9C9sCuVujmJhFNGY+i+7BdkG0cMph8gWKCcx43rwJxyz
+      69pMwJx4nRL6ec6SK412xEZzFsD2UND7F6ASO5ub0YInLWB4h4dcRMPK8oRJElOR
+      fdB2t6KaiHEn1gHLpzwhbqBaJ+RMI8tr2kJmsjj2MrfEZsvixiWJHGvzrsrSQuAn
+      SrGZLIJlOJNMqIJ+OJ4GBV18uupLavp7rvG6jbOGT5j7ZCSbPyZruUkGxONvEnE9
+      R5ufa7VHXiDE2sKQEuZbzwWd7pkoMtwp+8bculA4W6mhy9n0V1ZY8xQWes03LwR9
+      xXrxI+KVWdWbf0vhgq90LB83GR9PrMBzOtGKxtcoKIr8JRKqJMi2Y4UCr/4BQfUC
+      AwEAAaNTMFEwHQYDVR0OBBYEFEQU4DHICMkwON0EPvCzjVA7vC+VMB8GA1UdIwQY
+      MBaAFEQU4DHICMkwON0EPvCzjVA7vC+VMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZI
+      hvcNAQELBQADggIBAEQZEU43RAQUKMSXGYfpA44GVK7WM35fuJqoNjXsKTH4i/q3
+      qS96TT1+AWWb/m3yW9dsWVmt5VVBeEP7gpf7nIzFGogXI3rT3gqxC8H4xx6shtU6
+      a8hxMNco8tBu+mxkhTpBh7plPQ76MXSWVxNlphdjX5TnnMMrANOlYWQFRL8oRGLM
+      myrVPTImWFniUhqRwXDcNGKAil0kDyGf8cpeDoDicU0TuH3lYX89s2KsNLFVC4+s
+      AtpZK51vOaaDiHM/xeL6Q1NI2HPwj7Co2YZmH2spsCg5UEGvhUIO5FjZuUI2K+0C
+      ZhvyjZ7CB207oIfpwH4L23O8nENcsFwGZo3q/XD/tAshyNJ6M/XDrEYjhjzbTlhT
+      LhB705gJBEcdw4LI3EmAg/vHjI0JNgT+5BpCqEooCxBOmnN/o4RXWsDJaak7WPPM
+      XW7SGC141gd2+0aBBCFpx8GsWRsDKUx48cidyLQ8tWQ3Cf1CnWijj/ql4G5CxBfs
+      ScspmqsPQSzIqVdP71Jelz7m3+fPp3cHZ8+8wlJuH5nhbUOoUksdLbOLQc9TJCiv
+      otKLQY+s7K3ZOy9PmKIb/l4OEGVwCamEnF+MjEVdTvMPRl8/RotIVJFFKz1to95H
+      vzwIL1YmnNkoup1d5F4yLOGuSHQ0Gb+8Ka8CKNIsKKtFwAvyeN3PuHxPtU2c
+      -----END CERTIFICATE-----

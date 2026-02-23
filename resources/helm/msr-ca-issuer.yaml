@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: server-ca-issuer
+  namespace: iwhi
+spec:
+  ca:
+    secretName: server-ca-secret

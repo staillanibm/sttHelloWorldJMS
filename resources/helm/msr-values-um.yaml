@@ -1,0 +1,119 @@
+replicaCount: 1
+
+
+image:
+  repository: "quay.io/staillanibm/msr-hello-world-jms"
+  pullPolicy: Always
+  tag:        "latest"
+
+imagePullSecrets: 
+  - name: quay-regcred
+
+microservicesruntime:
+
+  licenseKeyProvided: false
+
+  memoryHeap:
+    min: "512M"
+    max: "1500M"
+
+  propertiesFile: 
+    content: |
+      # UM JNDI/JMS properties
+      jndi.DEFAULT_IS_JNDI_PROVIDER.initialContextFactory=com.pcbsys.nirvana.nSpace.NirvanaContextFactory
+      jndi.DEFAULT_IS_JNDI_PROVIDER.providerURL=nsps://um-um.apps.itz-q037mu.infra01-lb.fra02.techzone.ibm.com:443
+      jndi.DEFAULT_IS_JNDI_PROVIDER.securityPrincipal=
+      jndi.DEFAULT_IS_JNDI_PROVIDER.securityCredentials=
+      jndi.DEFAULT_IS_JNDI_PROVIDER.trustStoreAlias=JMS_TRUSTSTORE
+      jndi.DEFAULT_IS_JNDI_PROVIDER.trustStoreProp=nirvana.ssl.truststore.path
+      jndi.DEFAULT_IS_JNDI_PROVIDER.trustStorePwdProp=nirvana.ssl.truststore.pass
+      jms.DEFAULT_IS_JMS_CONNECTION.clientID=DEFAULT_IS_JMS_CLIENT
+      jms.DEFAULT_IS_JMS_CONNECTION.enabled=true
+      jms.DEFAULT_IS_JMS_CONNECTION.csqSize=0
+      jms.DEFAULT_IS_JMS_CONNECTION.jndi_jndiAliasName=DEFAULT_IS_JNDI_PROVIDER
+      jms.DEFAULT_IS_JMS_CONNECTION.jndi_automaticallyCreateUMAdminObjects=true
+      jms.DEFAULT_IS_JMS_CONNECTION.jndi_connectionFactoryLookupName=ocp_um
+
+      settings.watt.net.default.accept=application/json
+      settings.watt.server.ns.lockingMode=none
+
+      globalvariable.SERVER.value=$env{SERVER}
+
+      # API Port Keystore configuration
+      keystore.API_PORT_KEYSTORE.ksLocation=/certs/api-port/api_keystore.jks
+      keystore.API_PORT_KEYSTORE.keyAlias.1.keyAliasPassword=$secret{API_PORT_KEYSTORE_PASSWORD}
+      keystore.API_PORT_KEYSTORE.ksPassword=$secret{API_PORT_KEYSTORE_PASSWORD}
+      keystore.API_PORT_KEYSTORE.ksType=JKS
+      keystore.API_PORT_KEYSTORE.ksStoreProviderName=SUN
+
+      # JMS truststore configuration
+      truststore.JMS_TRUSTSTORE.ksLocation=/certs/messaging/jms_truststore.jks
+      truststore.JMS_TRUSTSTORE.ksPassword=$secret{JMS_TRUSTSTORE_PASSWORD}
+
+      user.Administrator.password=$secret{ADMIN_PASSWORD}
+
+      group.Everybody.users=tester
+      user.tester.password=$secret{TESTER_PASSWORD}
+
+secretMounts:
+  - name: msr-secrets
+    secretName: msr-secrets
+    path: /etc/secrets
+  - name: jms-truststore
+    secretName: jms-truststore
+    path: /certs/messaging
+  - name: api-keystore
+    secretName: api-keystore
+    path: /certs/api-port
+
+secretVolumes:
+  - name: msr-secrets
+    secretName: stt-hello-world-jms
+  - name: jms-truststore
+    secretName: jms-truststore
+  - name: api-keystore
+    secretName: api-keystore
+
+serviceAccount:
+  create: true
+  name: "stt-hello-world-jms"
+
+
+podSecurityContext:
+  runAsNonRoot: true
+  fsGroup: null
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  runAsNonRoot: true
+  #readOnlyRootFilesystem: true
+  #runAsUser: 1000
+
+extraPorts:
+  - containerPort: 6643
+    name: api-port
+    protocol: TCP
+
+ingress:
+  enabled: false
+
+resources:
+  msrContainer:
+    limits:
+      cpu: 1
+      memory: 2048Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+metering:
+  enabled: false
