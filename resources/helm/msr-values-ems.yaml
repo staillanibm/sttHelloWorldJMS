@@ -4,7 +4,7 @@ replicaCount: 1
 image:
   repository: "quay.io/staillanibm/msr-hello-world-jms"
   pullPolicy: Always
-  tag:        "1.0.1"
+  tag:        "latest"
 
 imagePullSecrets: 
   - name: quay-regcred
@@ -22,7 +22,7 @@ microservicesruntime:
       # Tibco EMS JNDI/JMS properties
       jndi.DEFAULT_IS_JNDI_PROVIDER.initialContextFactory=com.tibco.tibjms.naming.TibjmsInitialContextFactory
       jndi.DEFAULT_IS_JNDI_PROVIDER.providerURL=tcp://tibco-ems.tibcoems.svc.cluster.local:7222
-      jms.DEFAULT_IS_JMS_CONNECTION.clientID=DEFAULT_IS_JMS_CLIENT
+      jms.DEFAULT_IS_JMS_CONNECTION.clientID=$env{HOSTNAME}
       jms.DEFAULT_IS_JMS_CONNECTION.enabled=true
       jms.DEFAULT_IS_JMS_CONNECTION.jndi_jndiAliasName=DEFAULT_IS_JNDI_PROVIDER
       jms.DEFAULT_IS_JMS_CONNECTION.jndi_connectionFactoryLookupName=webmethods
@@ -30,7 +30,7 @@ microservicesruntime:
       settings.watt.net.default.accept=application/json
       settings.watt.server.ns.lockingMode=none
 
-      globalvariable.SERVER.value=$env{SERVER}
+      globalvariable.SERVER.value=$env{HOSTNAME}
 
       # API Port Keystore configuration
       keystore.API_PORT_KEYSTORE.ksLocation=/certs/api-port/keystore.jks

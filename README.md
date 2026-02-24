@@ -16,6 +16,9 @@ To further showcase the JMS API, a wrapping REST API method is also available, v
 - the flow service takes in input the same message received by the request queue
 - it uses the sendAndWait public service to call the JMS API
 - it returns the enhanced message returned by the JMS API
+  
+To align with security best practices, a custom 6643 TLS port is exposed to call this REST API, mapped to an OpenShift re-encrypt route. 
+The default 5555 and 5543 ports used to access the admin UI are segregated. A dedicated route is provided in this repo to access the UI, but for production workloads this route should be removed.  
 
 The REST API specification can be found in resources/api/api.yaml
 
@@ -24,15 +27,12 @@ The REST API specification can be found in resources/api/api.yaml
 A [Makefile](Makefile) is provided to build, push, deploy and test the microservice.  
 Notice the variables at the top of the file, which you can adapt to your context:
 ```
-DOCKER_RUNTIME=podman                                           # Change to docker if you're using Docker
-DEPLOYMENT_NAME=stt-hello-world-jms                             # The name of the Kube deployment (and also the name of the container when deploying using docker compose)
-IMAGE_NAME=ghcr.io/staillanibm/msr-hello-world-jms              # The container registry repo name in which the image is located
-TAG=latest                                                      # The image tag
-DOCKER_ROOT_URL=http://localhost:15555                          # The root url to call the REST API deployed via docker compose
-DOCKER_ADMIN_PASSWORD=Manage123                                 # The password to call the REST API deployed via docker compose
-KUBE_NAMESPACE=iwhi                                             # The kube namespace in which the microservice is deployed
-KUBE_ROOT_URL=https://stt-hello-world-jms-iwhi.somewhere.com    # The root url to call the REST API deployed via kube
-KUBE_ADMIN_PASSWORD=Manage12345                                 # The password to call the REST API deployed via kube
+DOCKER_RUNTIME=podman                                               # Change to docker if you're using Docker
+DEPLOYMENT_NAME=stt-hello-world-jms                                 # The name of the Kube deployment (and also the name of the container when deploying using docker compose)
+IMAGE_NAME=quay.io/staillanibm/msr-hello-world-jms                  # The container registry repo name in which the image is located
+TAG=latest                                                          # The image tag
+DOCKER_PORT_NUMBER=16643                                            # The port number exposed by the container deployed locally via docker compose
+KUBE_NAMESPACE=iwhi                                                 # The kube namespace in which the microservice is deployed
 ```
 
 ##  Build of the microservice image
@@ -41,6 +41,8 @@ We use a classical [Dockerfile](Dockerfile)
 - we start with the official webMethods Microservices Runtime (MSR) image
 - we copy the integration package that's in this repo
 - we add some JMS jar files in order for the MSR to connect to Tibco EMS (the JMS jar files to connect to Universal Messaging are already included in the official product image)  
+
+Note: the tibcrypt.jar is missing in the Dockerfile
 
 To build the image, ensure you are logged onto the icr.io repository (using your IBM entitlement key), then:
 `make kube-build`
@@ -74,17 +76,32 @@ To stop the deployment:
 
 ##  Kube deployment using Helm
 
-See the [helm](resources/helm) folder, which contains:
-- the Helm values file (msr-values.yaml), which includes amongst other things the content of the application.properties file
-- the OpenShift route definition (the Helm chart can only create kube ingresses at the moment)
-- the secrets neeeded for the deployment (including the jks truststore and the image pull secret)
-- an egress network policy to allow outgoing connections to Tibco EMS (in case it is needed)  
+See the [helm](resources/helm) folder, which contains the Helm values file (msr-values.yaml) and other descriptors needed to perform the deployment.  
+
+### Prerequisites
+
+You need to create the msr-secrets.yaml file.  
+Start with the msr-secrets.example file and follow the inline comment to fill in the requested secrets.
+
+### Deployment
+
+The Makefile references two targets: kube-deploy-ems (to connect to a Tibco EMS broker) and kube-deploy-um (to connect to a Universal Messaging broker.)  
+Before applying the Helm chart and the values.yaml file, these targets deal with a few things that aren't managed by the Helm chart:
+-   applying the msr-secrets.yaml file which contains all the secrets used by the deployment
+-   creating the CA issuer and the server certificate presented by the API endpoint
+-   creating a network policies that allows outbound trafic from the microservice to Tibco EMS (which is, in my case, deployed in another namespace within the same cluster)
+-   creating a service and a route to expose the custom API port (this isn't managed by the official Helm chart)
+-   creating a route to expose the microservice admin UI (also not managed by the official chart - this route is only needed for debugging purposes and should be skipped in production)
+  
 
 To install the webMethods Helm charts:
 `make helm-install-wm-repo`
 
-To deploy the microservice:
-`make kube-deploy`
+To deploy the microservice pointing to Tibco EMS:
+`make kube-deploy-ems`
+
+To deploy the microservice pointing to Universal Messaging:
+`make kube-deploy-um`
 
 To check the logs:
 `make kube-logs-f`

@@ -1,4 +1,4 @@
-FROM ibmwebmethods.azurecr.io/webmethods-microservicesruntime:11.1.0.9
+FROM cp.icr.io/cp/webmethods/integration/ibm-webmethods-integration-microservicesruntime:11.1.0.9
 
 ADD --chown=1724:0 . /opt/softwareag/IntegrationServer/packages/sttHelloWorldJMS
 
@@ -9,3 +9,4 @@ ADD --chown=1724:0 tibcoems/lib/tibjmsadmin.jar /opt/softwareag/IntegrationServe
 ADD --chown=1724:0 tibcoems/lib/tibjmsapps.jar /opt/softwareag/IntegrationServer/lib/jars/custom/tibjmsapps.jar
 ADD --chown=1724:0 tibcoems/lib/tibrvjms.jar /opt/softwareag/IntegrationServer/lib/jars/custom/tibrvjms.jar
 # Cryptography dependency missing here (not available in Tibco EMS community edition)
+# ADD --chown=1724:0 tibcoems/lib/tibcrypt.jar /opt/softwareag/IntegrationServer/lib/jars/custom/tibcrypt.jar

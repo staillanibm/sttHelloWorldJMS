@@ -6,7 +6,7 @@ services:
       - wm
     ports:
       - "15555:5555"
-      - "16643:6643"
+      - "${DOCKER_PORT_NUMBER}:6643"
     volumes:
       - ./application.properties.ems:/opt/softwareag/IntegrationServer/application.properties
       - ../certs/msr-service.jks:/certs/api-port/keystore.jks
